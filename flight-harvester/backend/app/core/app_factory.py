@@ -77,11 +77,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         else None,
     )
 
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.get_allowed_hosts())
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins,
+        allow_origins=settings.get_cors_origins(),
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization"],

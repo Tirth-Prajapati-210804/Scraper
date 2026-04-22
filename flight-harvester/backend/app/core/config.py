@@ -17,8 +17,30 @@ class Settings(BaseSettings):
     environment: str = "development"
     debug: bool = False
     api_v1_prefix: str = "/api/v1"
-    cors_origins: list[str] = ["http://localhost:5173"]
-    allowed_hosts: list[str] = ["localhost", "127.0.0.1", "test", "backend", "frontend"]
+    cors_origins: str = "http://localhost:5173"
+    allowed_hosts: str = "localhost,127.0.0.1,test,backend,frontend"
+
+    @field_validator("cors_origins", "allowed_hosts", mode="before")
+    @classmethod
+    def parse_list_to_string(cls, v: object) -> str:
+        if isinstance(v, list):
+            import json
+            return json.dumps(v)
+        return str(v)
+
+    def get_cors_origins(self) -> list[str]:
+        v = self.cors_origins.strip()
+        if v.startswith("["):
+            import json
+            return json.loads(v)
+        return [origin.strip() for origin in v.split(",") if origin.strip()]
+
+    def get_allowed_hosts(self) -> list[str]:
+        v = self.allowed_hosts.strip()
+        if v.startswith("["):
+            import json
+            return json.loads(v)
+        return [host.strip() for host in v.split(",") if host.strip()]
     expose_api_docs: bool = False
 
     # Database
@@ -94,25 +116,6 @@ class Settings(BaseSettings):
             )
         return v
 
-    @field_validator("cors_origins", "allowed_hosts", mode="before")
-    @classmethod
-    def parse_list_setting(cls, v: object) -> list[str]:
-        if isinstance(v, str):
-            v = v.strip()
-            if v.startswith("["):
-                import json
-                return json.loads(v)
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return v  # type: ignore[return-value]
-
-    @field_validator("cors_origins")
-    @classmethod
-    def validate_cors_origins(cls, origins: list[str]) -> list[str]:
-        for origin in origins:
-            parsed = urlparse(origin)
-            if origin == "*" or parsed.scheme not in {"http", "https"} or not parsed.netloc:
-                raise ValueError("CORS_ORIGINS must contain explicit http(s) origins")
-        return origins
 
     @field_validator("debug", "scheduler_enabled", "expose_api_docs", mode="before")
     @classmethod
