@@ -268,11 +268,15 @@ class FlightScheduler:
 
         log.info("collection_cycle_finished")
 
+    _MAX_DATES = 730  # Defensive cap — matches schema validation
+
     def _group_dates(self, group: RouteGroup) -> list[date]:
         today = date.today()
         start = group.start_date or today
-        end = group.end_date or (start + timedelta(days=group.days_ahead))
-        return [start + timedelta(days=d) for d in range((end - start).days + 1)]
+        end = group.end_date or (start + timedelta(days=min(group.days_ahead, self._MAX_DATES)))
+        # Defensive cap to prevent runaway date generation from corrupted data
+        num_days = min((end - start).days + 1, self._MAX_DATES)
+        return [start + timedelta(days=d) for d in range(num_days)]
 
     async def _filter_already_scraped(
         self,

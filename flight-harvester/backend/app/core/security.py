@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from jose import JWTError, jwt
+import jwt
 from passlib.context import CryptContext
 
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
@@ -45,5 +45,5 @@ def decode_token(token: str, secret_key: str, algorithm: str) -> dict | None:
         if payload.get("type") != _ACCESS_TOKEN_TYPE:
             return None
         return payload
-    except JWTError:
+    except jwt.PyJWTError:
         return None

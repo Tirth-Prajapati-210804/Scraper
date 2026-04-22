@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import re
 from collections import defaultdict, deque
 from collections.abc import Callable
 from threading import Lock
 from time import monotonic
+
+# Simple IPv4/IPv6 format check to reject obviously invalid values
+_IP_LIKE = re.compile(r"^[\da-fA-F.:]+$")
 
 
 class SlidingWindowRateLimiter:
@@ -49,6 +53,20 @@ def build_rate_limit_key(scope: str, *parts: object) -> str:
 
 
 def unwrap_client_host(forwarded_for: str | None, fallback: Callable[[], str]) -> str:
+    """Extract client IP for rate-limiting.
+
+    Always incorporates the direct socket IP (via *fallback*) into the result
+    so that a spoofed X-Forwarded-For header cannot bypass rate limits.
+    When behind a trusted reverse proxy (nginx), X-Forwarded-For is reliable
+    and we combine it with the direct IP for belt-and-suspenders safety.
+    """
+    direct_ip = fallback()
     if forwarded_for:
-        return forwarded_for.split(",", 1)[0].strip()
-    return fallback()
+        candidate = forwarded_for.split(",", 1)[0].strip()
+        # Basic sanity check: reject obviously invalid values
+        if candidate and _IP_LIKE.match(candidate) and len(candidate) <= 45:
+            # Combine forwarded IP + direct IP so that even if one is spoofed,
+            # the rate limit key remains unique per actual connection.
+            return f"{candidate}|{direct_ip}"
+    return direct_ip
+

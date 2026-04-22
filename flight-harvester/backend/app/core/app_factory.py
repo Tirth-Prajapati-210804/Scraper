@@ -87,6 +87,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["Content-Type", "Authorization"],
     )
 
+    # ── Request body size limit (DoS prevention) ──────────────────────────
+    _MAX_BODY_BYTES = 1_048_576  # 1 MB
+
+    @app.middleware("http")
+    async def limit_request_body(request: Request, call_next):
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > _MAX_BODY_BYTES:
+            return JSONResponse(
+                status_code=413,
+                content={"detail": "Request body too large"},
+            )
+        return await call_next(request)
+
+    # ── Security headers ─────────────────────────────────────────────────
     @app.middleware("http")
     async def add_security_headers(request: Request, call_next):
         request_id = request.headers.get("x-request-id") or str(uuid4())
@@ -96,6 +110,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "no-referrer")
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'none'; frame-ancestors 'none'",
+        )
         response.headers.setdefault(
             "Permissions-Policy",
             "camera=(), geolocation=(), microphone=()",

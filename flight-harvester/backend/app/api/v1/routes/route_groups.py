@@ -172,13 +172,15 @@ async def export_group(group_id: uuid.UUID, session: _DB, current_user: _Auth) -
     all_results = list(all_results_result.scalars().all())
 
     excel_bytes = export_service.export_route_group(group, all_results)
+    # Sanitize filename: strip dangerous chars, quotes, newlines, and limit length
     safe_name = re.sub(r"[^A-Za-z0-9._-]+", "_", group.name).strip("._") or "route-group"
+    safe_name = safe_name.replace('"', "").replace("'", "")[:100]
     filename = f"{safe_name}.xlsx"
 
     return StreamingResponse(
         iter([excel_bytes]),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": f"attachment; filename=\"{filename}\"; filename*=UTF-8''{filename}"},
     )
 
 

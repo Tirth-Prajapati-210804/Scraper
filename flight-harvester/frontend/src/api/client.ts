@@ -3,6 +3,11 @@ import axios from "axios";
 // In Docker, VITE_API_BASE_URL is "" so axios uses relative URLs (proxied by nginx).
 // In local dev it is "http://localhost:8000" (set in frontend/.env).
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+
+// SECURITY NOTE: We use sessionStorage (not localStorage) for JWT tokens.
+// - sessionStorage is cleared when the browser tab closes, limiting exposure.
+// - Bearer token auth is inherently CSRF-resistant (no auto-attached cookies).
+// - XSS remains the primary risk vector; CSP headers are set in nginx.conf to mitigate.
 const TOKEN_STORAGE_KEY = "token";
 
 function readToken(): string | null {
