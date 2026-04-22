@@ -48,6 +48,8 @@ class MockProvider:
         depart_date: date,
         adults: int = 1,
         cabin: str = "economy",
+        currency: str = "USD",
+        max_stops: int | None = None,
     ) -> list[ProviderResult]:
         low, high = _PRICE_RANGES.get(destination, _DEFAULT_RANGE)
         results = []
@@ -58,10 +60,12 @@ class MockProvider:
             airline = _AIRLINES[r % len(_AIRLINES)]
             stops = r % 3
             duration = 480 + (r % 480)              # 8–16 hours in minutes
+            if max_stops is not None and stops > max_stops:
+                continue
             results.append(
                 ProviderResult(
                     price=float(price),
-                    currency="CAD",
+                    currency=currency,
                     airline=airline,
                     deep_link="",
                     provider=self.name,

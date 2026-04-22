@@ -61,53 +61,53 @@ function ExtraOptionsFields({
 
   return (
     <div className="space-y-4">
-      {/* Currency */}
-      <div>
-        <label className="field-label">Display Currency</label>
-        <select
-          className="field-input"
-          value={values.currency}
-          onChange={(e) => onChange("currency", e.target.value)}
-        >
-          {CURRENCIES.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-        {currencyChanged && (
-          <p className="mt-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-            Changing currency only affects new collections. Already-collected prices will still show their original currency.
-          </p>
-        )}
+      {/* Currency + Stops side by side */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="field-label">Currency</label>
+          <select
+            className="field-input"
+            value={values.currency}
+            onChange={(e) => onChange("currency", e.target.value)}
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="field-label">Max Stops</label>
+          <div className="mt-1 flex gap-1.5 flex-wrap">
+            {STOP_OPTIONS.map((opt) => (
+              <button
+                key={String(opt.value)}
+                type="button"
+                onClick={() => onChange("max_stops", opt.value)}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  values.max_stops === opt.value
+                    ? "border-brand-600 bg-brand-600 text-white"
+                    : "border-slate-300 bg-white text-slate-700 hover:border-brand-400"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Stops */}
-      <div>
-        <label className="field-label">Max Stops</label>
-        <div className="flex gap-2 flex-wrap">
-          {STOP_OPTIONS.map((opt) => (
-            <button
-              key={String(opt.value)}
-              type="button"
-              onClick={() => onChange("max_stops", opt.value)}
-              className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-                values.max_stops === opt.value
-                  ? "border-brand-600 bg-brand-600 text-white"
-                  : "border-slate-300 bg-white text-slate-700 hover:border-brand-400"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        <p className="mt-1.5 text-xs text-slate-400">Filter results by number of stops. "Any" returns all flights.</p>
-      </div>
+      {currencyChanged && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+          Currency change only affects new collections.
+        </p>
+      )}
 
       {/* Date range */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="field-label">Start Date <span className="text-slate-400">(optional, default: today)</span></label>
+          <label className="field-label">Start Date</label>
           <input
             type="date"
             className="field-input"
@@ -116,7 +116,7 @@ function ExtraOptionsFields({
           />
         </div>
         <div>
-          <label className="field-label">End Date <span className="text-slate-400">(optional)</span></label>
+          <label className="field-label">End Date</label>
           <input
             type="date"
             className="field-input"
@@ -208,7 +208,7 @@ function QuickForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {/* Route input */}
       <div className="flex items-center gap-3">
         <div className="flex-1">
@@ -235,11 +235,8 @@ function QuickForm({
         </div>
       </div>
 
-      <p className="text-xs text-slate-500">
-        Type a country or city name. Examples: <em>Canada</em>, <em>Japan</em>,{" "}
-        <em>Tokyo</em>, <em>Bali</em>, <em>London</em>.
-        You can also combine: <em>Tokyo, Osaka</em> or use IATA codes directly:{" "}
-        <em>YYZ, YVR</em>.
+      <p className="text-xs text-slate-400">
+        Use country names, city names, or IATA codes. Combine with commas: <em>Tokyo, Osaka</em>
       </p>
 
       {/* Nights & Days ahead */}
@@ -255,7 +252,6 @@ function QuickForm({
             onChange={(e) => set("nights", Number(e.target.value))}
             required
           />
-          <p className="mt-1 text-xs text-slate-400">Duration of stay, e.g. 7</p>
         </div>
         <div>
           <label className="field-label">Days ahead to track</label>
@@ -268,7 +264,6 @@ function QuickForm({
             onChange={(e) => set("days_ahead", Number(e.target.value))}
             required
           />
-          <p className="mt-1 text-xs text-slate-400">How far into the future to collect, e.g. 365</p>
         </div>
       </div>
 
@@ -440,53 +435,51 @@ function AdvancedForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="field-label">Name</label>
-        <input
-          className="field-input"
-          value={form.name}
-          onChange={(e) => set("name", e.target.value)}
-          required
-          placeholder="CAD-Tokyo-Shanghai-CAD"
-        />
-        <p className="mt-1 text-xs text-slate-400">A unique identifier for this route group</p>
-      </div>
-
-      <div>
-        <label className="field-label">Destination Label</label>
-        <input
-          className="field-input"
-          value={form.destination_label}
-          onChange={(e) => set("destination_label", e.target.value)}
-          required
-          placeholder="TYO/SHA"
-        />
-        <p className="mt-1 text-xs text-slate-400">Short display name shown in the UI, e.g. TYO/SHA</p>
-      </div>
-
-      <div>
-        <label className="field-label">Origin airports</label>
-        <TagInput
-          value={form.origins}
-          onChange={(tags) => set("origins", tags)}
-          placeholder="YYZ, YVR…"
-          hint="Type an IATA code and press Enter or comma to add"
-        />
-      </div>
-
-      <div>
-        <label className="field-label">Destination airports</label>
-        <TagInput
-          value={form.destinations}
-          onChange={(tags) => set("destinations", tags)}
-          placeholder="NRT, BKK…"
-          hint="Type an IATA code and press Enter or comma to add"
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="field-label">Route Name</label>
+          <input
+            className="field-input"
+            value={form.name}
+            onChange={(e) => set("name", e.target.value)}
+            required
+            placeholder="e.g. Canada-Tokyo"
+          />
+        </div>
+        <div>
+          <label className="field-label">Destination Label</label>
+          <input
+            className="field-input"
+            value={form.destination_label}
+            onChange={(e) => set("destination_label", e.target.value)}
+            required
+            placeholder="e.g. TYO/SHA"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="field-label">Nights</label>
+          <label className="field-label">Origin airports</label>
+          <TagInput
+            value={form.origins}
+            onChange={(tags) => set("origins", tags)}
+            placeholder="YYZ, YVR…"
+          />
+        </div>
+        <div>
+          <label className="field-label">Destination airports</label>
+          <TagInput
+            value={form.destinations}
+            onChange={(tags) => set("destinations", tags)}
+            placeholder="NRT, BKK…"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="field-label">Nights at destination</label>
           <input
             type="number"
             min={1}
@@ -495,10 +488,9 @@ function AdvancedForm({
             onChange={(e) => set("nights", Number(e.target.value))}
             required
           />
-          <p className="mt-1 text-xs text-slate-400">Duration of stay at destination</p>
         </div>
         <div>
-          <label className="field-label">Days Ahead</label>
+          <label className="field-label">Days ahead to track</label>
           <input
             type="number"
             min={1}
@@ -507,19 +499,20 @@ function AdvancedForm({
             onChange={(e) => set("days_ahead", Number(e.target.value))}
             required
           />
-          <p className="mt-1 text-xs text-slate-400">How many future dates to collect prices for</p>
         </div>
       </div>
 
-      <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-        <input
-          type="checkbox"
-          checked={form.is_active}
-          onChange={(e) => set("is_active", e.target.checked)}
-          className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-        />
-        Active
-      </label>
+      {initial && (
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={form.is_active}
+            onChange={(e) => set("is_active", e.target.checked)}
+            className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+          />
+          Active
+        </label>
+      )}
 
       {/* Additional Options */}
       <div className="rounded-lg border border-slate-200 px-3 py-4">

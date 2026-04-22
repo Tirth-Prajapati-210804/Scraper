@@ -3,7 +3,7 @@ name = "flight-data-scrapper-backend"
 version = "1.0.0"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi>=0.115.0",
+    "fastapi[standard]>=0.115.0",
     "uvicorn[standard]>=0.32.0",
     "httpx>=0.28.0",
     "pydantic>=2.10.0",

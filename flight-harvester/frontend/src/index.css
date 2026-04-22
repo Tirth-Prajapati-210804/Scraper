@@ -19,6 +19,16 @@
   }
 }
 
+/* Strip all browser chrome from the inner input inside TagInput */
+.tag-input-wrap input,
+.tag-input-wrap input:focus,
+.tag-input-wrap input:focus-visible {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  ring: none !important;
+}
+
 @keyframes toast-slide-in {
   from {
     opacity: 0;

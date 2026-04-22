@@ -4,6 +4,9 @@ import asyncio
 import os
 from logging.config import fileConfig
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 

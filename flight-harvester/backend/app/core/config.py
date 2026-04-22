@@ -87,10 +87,10 @@ class Settings(BaseSettings):
             raise ValueError("DATABASE_URL must use the postgresql+asyncpg scheme")
 
         host = parsed.hostname or ""
-        sslmode = parse_qs(parsed.query).get("sslmode", [""])[0]
-        if host and host not in _LOCAL_DB_HOSTS and sslmode != "require":
+        ssl = parse_qs(parsed.query).get("ssl", [""])[0]
+        if host and host not in _LOCAL_DB_HOSTS and ssl != "require":
             raise ValueError(
-                "Remote PostgreSQL connections must include sslmode=require in DATABASE_URL"
+                "Remote PostgreSQL connections must include ssl=require in DATABASE_URL"
             )
         return v
 

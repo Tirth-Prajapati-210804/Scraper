@@ -96,10 +96,22 @@ async def delete(
     requesting_user_id: uuid.UUID | None = None,
     is_admin: bool = True,
 ) -> bool:
+    # Verify access first
     group = await get_by_id(session, group_id, requesting_user_id=requesting_user_id, is_admin=is_admin)
     if not group:
         return False
-    session.delete(group)
+
+    from sqlalchemy import delete as sa_delete
+    from app.models.all_flight_result import AllFlightResult
+    from app.models.daily_cheapest import DailyCheapestPrice
+
+    # 1. Explicitly delete related flight data (redundant if CASCADE is set, but safer)
+    await session.execute(sa_delete(DailyCheapestPrice).where(DailyCheapestPrice.route_group_id == group_id))
+    await session.execute(sa_delete(AllFlightResult).where(AllFlightResult.route_group_id == group_id))
+
+    # 2. Delete the group itself using a direct statement
+    await session.execute(sa_delete(RouteGroup).where(RouteGroup.id == group_id))
+    
     await session.commit()
     return True
 

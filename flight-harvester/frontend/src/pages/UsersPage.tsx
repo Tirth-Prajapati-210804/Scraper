@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   createUser,
+  deleteUser,
   listUsers,
   updateUser,
   type UserCreatePayload,
@@ -29,7 +30,7 @@ function UserFormModal({ open, onClose, initial, onSaved }: UserFormModalProps) 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("viewer");
+  const [role, setRole] = useState("employee");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,13 +38,13 @@ function UserFormModal({ open, onClose, initial, onSaved }: UserFormModalProps) 
     if (initial) {
       setFullName(initial.full_name);
       setEmail(initial.email);
-      setRole(initial.role);
+      setRole(initial.role === "admin" ? "admin" : "employee");
       setPassword("");
     } else {
       setFullName("");
       setEmail("");
       setPassword("");
-      setRole("viewer");
+      setRole("employee");
     }
     setError(null);
   }, [initial, open]);
@@ -78,16 +79,30 @@ function UserFormModal({ open, onClose, initial, onSaved }: UserFormModalProps) 
   return (
     <Modal open={open} onClose={onClose} title={initial ? "Edit User" : "Add User"}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="field-label">Full Name</label>
-          <input
-            className="field-input"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-            autoFocus
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="field-label">Full Name</label>
+            <input
+              className="field-input"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="field-label">Role</label>
+            <select
+              className="field-input"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              <option value="employee">Employee</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
         </div>
+
         <div>
           <label className="field-label">Email</label>
           <input
@@ -98,6 +113,7 @@ function UserFormModal({ open, onClose, initial, onSaved }: UserFormModalProps) 
             required
           />
         </div>
+
         <div>
           <label className="field-label">
             Password{initial && <span className="ml-1 text-slate-400">(leave blank to keep current)</span>}
@@ -108,20 +124,10 @@ function UserFormModal({ open, onClose, initial, onSaved }: UserFormModalProps) 
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required={!initial}
-            minLength={8}
+            minLength={12}
             placeholder={initial ? "••••••••" : ""}
           />
-        </div>
-        <div>
-          <label className="field-label">Role</label>
-          <select
-            className="field-input"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-          >
-            <option value="viewer">Viewer</option>
-            <option value="admin">Admin</option>
-          </select>
+          <p className="mt-1 text-xs text-slate-400">Minimum 12 characters</p>
         </div>
 
         {error && (
@@ -153,6 +159,8 @@ export function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<UserRecord | null>(null);
+  const [confirmUser, setConfirmUser] = useState<UserRecord | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Guard: non-admins redirected to dashboard
   useEffect(() => {
@@ -182,15 +190,18 @@ export function UsersPage() {
     setModalOpen(true);
   }
 
-  async function handleToggleActive(u: UserRecord) {
-    const action = u.is_active ? "deactivate" : "activate";
-    if (!window.confirm(`${u.is_active ? "Deactivate" : "Activate"} user "${u.full_name}"?`)) return;
+  async function handleDeleteConfirm() {
+    if (!confirmUser) return;
+    setDeleting(true);
     try {
-      await updateUser(u.id, { is_active: !u.is_active });
-      showToast(`User ${action}d`, "success");
-      load();
+      await deleteUser(confirmUser.id);
+      setUsers((prev) => prev.filter((x) => x.id !== confirmUser.id));
+      showToast("User deleted", "success");
     } catch {
-      showToast(`Failed to ${action} user`, "error");
+      showToast("Failed to delete user", "error");
+    } finally {
+      setDeleting(false);
+      setConfirmUser(null);
     }
   }
 
@@ -216,14 +227,13 @@ export function UsersPage() {
                   <th className="px-3 py-2.5">Full Name</th>
                   <th className="px-3 py-2.5">Email</th>
                   <th className="px-3 py-2.5">Role</th>
-                  <th className="px-3 py-2.5">Status</th>
                   <th className="px-3 py-2.5">Created</th>
                   <th className="px-3 py-2.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((u, i) => (
-                  <tr key={u.id} className={`${i % 2 !== 0 ? "bg-slate-50/50" : ""} ${!u.is_active ? "opacity-60" : ""}`}>
+                  <tr key={u.id} className={i % 2 !== 0 ? "bg-slate-50/50" : ""}>
                     <td className="px-3 py-2 font-medium text-slate-800">{u.full_name}</td>
                     <td className="px-3 py-2 text-slate-600">{u.email}</td>
                     <td className="px-3 py-2">
@@ -234,18 +244,7 @@ export function UsersPage() {
                             : "bg-slate-100 text-slate-600"
                         }`}
                       >
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          u.is_active
-                            ? "bg-green-100 text-green-700"
-                            : "bg-slate-100 text-slate-500"
-                        }`}
-                      >
-                        {u.is_active ? "Active" : "Inactive"}
+                        {u.role === "admin" ? "admin" : "employee"}
                       </span>
                     </td>
                     <td className="px-3 py-2 text-slate-400">
@@ -261,14 +260,10 @@ export function UsersPage() {
                         </button>
                         {u.id !== currentUser?.id && (
                           <button
-                            onClick={() => handleToggleActive(u)}
-                            className={`rounded px-2 py-1 text-xs ${
-                              u.is_active
-                                ? "text-amber-600 hover:bg-amber-50"
-                                : "text-green-600 hover:bg-green-50"
-                            }`}
+                            onClick={() => setConfirmUser(u)}
+                            className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
                           >
-                            {u.is_active ? "Deactivate" : "Activate"}
+                            Delete
                           </button>
                         )}
                       </div>
@@ -287,6 +282,30 @@ export function UsersPage() {
         initial={editing}
         onSaved={load}
       />
+
+      {/* Delete Confirmation Modal */}
+      {confirmUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-slate-900">Delete User</h3>
+            <p className="mt-2 text-sm text-slate-500">
+              Are you sure you want to delete <span className="font-medium text-slate-700">{confirmUser.full_name}</span>? This cannot be undone.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setConfirmUser(null)}>
+                Cancel
+              </Button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={deleting}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

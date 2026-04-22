@@ -35,30 +35,6 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left brand panel — hidden on small screens */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-gradient-to-br from-brand-600 to-brand-800 p-12 text-white">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 mb-6">
-          <Plane className="h-8 w-8 text-white" />
-        </div>
-        <h1 className="text-3xl font-bold text-center">Flight Price Tracker</h1>
-        <p className="mt-3 text-brand-100 text-center max-w-xs text-sm leading-relaxed">
-          Automated flight price collection and analysis for smarter travel decisions.
-        </p>
-        <ul className="mt-10 space-y-3 text-sm text-brand-100">
-          {[
-            "Multi-origin route monitoring",
-            "Automated daily collection",
-            "Currency & stops filtering",
-            "Export to Excel",
-          ].map((feat) => (
-            <li key={feat} className="flex items-center gap-3">
-              <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-brand-300" aria-hidden="true" />
-              {feat}
-            </li>
-          ))}
-        </ul>
-      </div>
-
       {/* Right form panel */}
       <div className="flex flex-1 flex-col items-center justify-center bg-slate-50 px-8 py-12">
         {/* Mobile logo */}

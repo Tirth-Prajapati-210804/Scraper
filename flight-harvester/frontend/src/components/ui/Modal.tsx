@@ -37,11 +37,12 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       {/* Card */}
       <div
         className={cn(
-          "relative z-10 w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-xl",
+          "relative z-10 flex w-full max-w-lg flex-col rounded-xl border border-slate-200 bg-white shadow-xl",
+          "max-h-[90vh]",
           className,
         )}
       >
-        <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
           <h2 className="text-base font-semibold text-slate-900">{title}</h2>
           <button
             onClick={onClose}
@@ -51,7 +52,9 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
             <X className="h-4 w-4" />
           </button>
         </div>
-        {children}
+        <div className="overflow-y-auto px-6 py-4">
+          {children}
+        </div>
       </div>
     </div>
   );

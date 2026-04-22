@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-UserRole = Literal["admin", "user", "viewer"]
+UserRole = Literal["admin", "employee"]
 
 
 class LoginRequest(BaseModel):
@@ -25,7 +25,7 @@ class UserResponse(BaseModel):
     id: uuid.UUID
     email: str
     full_name: str
-    role: UserRole
+    role: str
 
 
 class LoginResponse(BaseModel):
@@ -39,7 +39,7 @@ class UserCreate(BaseModel):
     full_name: str = Field(min_length=1, max_length=255)
     email: EmailStr
     password: str = Field(min_length=12, max_length=256)
-    role: UserRole = "viewer"
+    role: UserRole = "employee"
 
     @field_validator("full_name")
     @classmethod
@@ -84,6 +84,6 @@ class UserListResponse(BaseModel):
     id: uuid.UUID
     full_name: str
     email: str
-    role: UserRole
+    role: str
     is_active: bool
     created_at: datetime
