@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+}
+
+@layer components {
+  .field-label {
+    @apply mb-1 block text-sm font-medium text-slate-600;
+  }
+  .field-input {
+    @apply mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm
+           placeholder-slate-400 shadow-sm
+           focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500;
+  }
+}
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.toast-animate {
+  animation: toast-slide-in 0.2s ease-out;
+}
