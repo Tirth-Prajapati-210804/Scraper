@@ -66,7 +66,7 @@ class RouteGroupCreate(BaseModel):
     sheet_name_map: dict[str, str] = Field(default_factory=dict)
     special_sheets: list[SpecialSheetConfig] = Field(default_factory=list)
     currency: str = Field(default="USD", pattern=_CURRENCY_PATTERN)
-    max_stops: int | None = Field(default=None, ge=0, le=2)
+    max_stops: int | None = Field(default=None, ge=0, le=3)
     start_date: date | None = None
     end_date: date | None = None
 
@@ -109,7 +109,7 @@ class RouteGroupUpdate(BaseModel):
     special_sheets: list[SpecialSheetConfig] | None = None
     is_active: bool | None = None
     currency: str | None = Field(default=None, pattern=_CURRENCY_PATTERN)
-    max_stops: int | None = Field(default=None, ge=0, le=2)
+    max_stops: int | None = Field(default=None, ge=0, le=3)
     start_date: date | None = None
     end_date: date | None = None
 
@@ -176,7 +176,7 @@ class RouteGroupFromTextCreate(BaseModel):
     nights: int = Field(ge=1, le=90, default=10)
     days_ahead: int = Field(ge=1, le=730, default=365)
     currency: str = Field(default="USD", pattern=_CURRENCY_PATTERN)
-    max_stops: int | None = Field(default=None, ge=0, le=2)
+    max_stops: int | None = Field(default=None, ge=0, le=3)
     start_date: date | None = None
     end_date: date | None = None
 

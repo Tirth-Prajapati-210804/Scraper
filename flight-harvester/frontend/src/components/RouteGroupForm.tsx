@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
 import { TagInput } from "./ui/TagInput";
 import { type FormEvent, useEffect, useState } from "react";
 import {
@@ -8,7 +8,7 @@ import {
   updateRouteGroup,
 } from "../api/route-groups";
 import { useToast } from "../context/ToastContext";
-import type { RouteGroup } from "../types/route-group";
+import type { RouteGroup, SpecialSheet } from "../types/route-group";
 import { Button } from "./ui/Button";
 import { Modal } from "./ui/Modal";
 
@@ -36,6 +36,7 @@ const STOP_OPTIONS: { label: string; value: number | null }[] = [
   { label: "Any", value: null },
   { label: "Direct", value: 0 },
   { label: "1", value: 1 },
+  { label: "Prefer 1", value: 3 },
   { label: "2", value: 2 },
 ];
 
@@ -338,6 +339,7 @@ interface AdvancedState {
   max_stops: number | null;
   start_date: string;
   end_date: string;
+  special_sheets: SpecialSheet[];
 }
 
 function toAdvancedState(rg?: RouteGroup | null): AdvancedState {
@@ -354,6 +356,7 @@ function toAdvancedState(rg?: RouteGroup | null): AdvancedState {
       max_stops: null,
       start_date: "",
       end_date: "",
+      special_sheets: [],
     };
   }
   return {
@@ -368,6 +371,7 @@ function toAdvancedState(rg?: RouteGroup | null): AdvancedState {
     max_stops: rg.max_stops ?? null,
     start_date: rg.start_date ?? "",
     end_date: rg.end_date ?? "",
+    special_sheets: rg.special_sheets ?? [],
   };
 }
 
@@ -418,6 +422,7 @@ function AdvancedForm({
         max_stops: form.max_stops,
         start_date: form.start_date || null,
         end_date: form.end_date || null,
+        special_sheets: form.special_sheets,
       };
       if (initial) {
         await updateRouteGroup(initial.id, payload);
@@ -513,6 +518,107 @@ function AdvancedForm({
           Active
         </label>
       )}
+
+      {/* Additional Routes */}
+      <div className="rounded-lg border border-slate-200 px-3 py-4">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Additional Routes (Multi-City)
+          </p>
+          <button
+            type="button"
+            onClick={() =>
+              set("special_sheets", [
+                ...form.special_sheets,
+                { name: "", origin: "", destination_label: "", destinations: [], columns: 4 },
+              ])
+            }
+            className="flex items-center gap-1 rounded-md text-xs font-medium text-brand-600 hover:text-brand-700"
+          >
+            <Plus className="h-3 w-3" /> Add Route
+          </button>
+        </div>
+        
+        {form.special_sheets.length > 0 ? (
+          <div className="space-y-4">
+            {form.special_sheets.map((sheet, index) => (
+              <div key={index} className="relative rounded-md border border-slate-200 bg-slate-50 p-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = [...form.special_sheets];
+                    next.splice(index, 1);
+                    set("special_sheets", next);
+                  }}
+                  className="absolute right-2 top-2 rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                <div className="grid grid-cols-2 gap-3 pr-8">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">Tab Name</label>
+                    <input
+                      className="field-input text-sm"
+                      value={sheet.name}
+                      onChange={(e) => {
+                        const next = [...form.special_sheets];
+                        next[index].name = e.target.value;
+                        set("special_sheets", next);
+                      }}
+                      placeholder="e.g. Osaka to Beijing"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">Origin Airport</label>
+                    <input
+                      className="field-input text-sm"
+                      value={sheet.origin}
+                      onChange={(e) => {
+                        const next = [...form.special_sheets];
+                        next[index].origin = e.target.value;
+                        set("special_sheets", next);
+                      }}
+                      placeholder="e.g. OSA"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">Destination Label</label>
+                    <input
+                      className="field-input text-sm"
+                      value={sheet.destination_label}
+                      onChange={(e) => {
+                        const next = [...form.special_sheets];
+                        next[index].destination_label = e.target.value;
+                        set("special_sheets", next);
+                      }}
+                      placeholder="e.g. Beijing (Any)"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">Destination Airports</label>
+                    <TagInput
+                      value={sheet.destinations}
+                      onChange={(tags) => {
+                        const next = [...form.special_sheets];
+                        next[index].destinations = tags;
+                        set("special_sheets", next);
+                      }}
+                      placeholder="PEK, PKX..."
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-slate-400">
+            Add specific one-off routes that should be tracked alongside the main destinations (e.g. return flights).
+          </p>
+        )}
+      </div>
 
       {/* Additional Options */}
       <div className="rounded-lg border border-slate-200 px-3 py-4">

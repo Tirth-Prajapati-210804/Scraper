@@ -66,9 +66,10 @@ class PriceCollector:
             for provider in self.providers:
                 start = time.monotonic()
                 try:
+                    api_max_stops = 2 if max_stops == 3 else max_stops
                     results = await provider.search_one_way(
                         origin, destination, depart_date,
-                        currency=currency, max_stops=max_stops,
+                        currency=currency, max_stops=api_max_stops,
                     )
                     elapsed_ms = int((time.monotonic() - start) * 1000)
 
@@ -113,7 +114,11 @@ class PriceCollector:
                     )
                     session.add(log_entry)
 
-            cheapest = min(all_results, key=lambda r: r.price) if all_results else None
+            if max_stops == 3 and all_results:
+                preferred = [r for r in all_results if r.stops is not None and r.stops <= 1]
+                cheapest = min(preferred, key=lambda r: r.price) if preferred else min(all_results, key=lambda r: r.price)
+            else:
+                cheapest = min(all_results, key=lambda r: r.price) if all_results else None
 
             if cheapest:
                 await self._upsert_cheapest(
