@@ -562,7 +562,7 @@ function AdvancedForm({
                       value={sheet.name}
                       onChange={(e) => {
                         const next = [...form.special_sheets];
-                        next[index].name = e.target.value;
+                        next[index] = { ...next[index], name: e.target.value };
                         set("special_sheets", next);
                       }}
                       placeholder="e.g. Osaka to Beijing"
@@ -576,7 +576,7 @@ function AdvancedForm({
                       value={sheet.origin}
                       onChange={(e) => {
                         const next = [...form.special_sheets];
-                        next[index].origin = e.target.value;
+                        next[index] = { ...next[index], origin: e.target.value };
                         set("special_sheets", next);
                       }}
                       placeholder="e.g. OSA"
@@ -590,7 +590,7 @@ function AdvancedForm({
                       value={sheet.destination_label}
                       onChange={(e) => {
                         const next = [...form.special_sheets];
-                        next[index].destination_label = e.target.value;
+                        next[index] = { ...next[index], destination_label: e.target.value };
                         set("special_sheets", next);
                       }}
                       placeholder="e.g. Beijing (Any)"
@@ -603,7 +603,7 @@ function AdvancedForm({
                       value={sheet.destinations}
                       onChange={(tags) => {
                         const next = [...form.special_sheets];
-                        next[index].destinations = tags;
+                        next[index] = { ...next[index], destinations: tags };
                         set("special_sheets", next);
                       }}
                       placeholder="PEK, PKX..."

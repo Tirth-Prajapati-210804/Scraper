@@ -49,7 +49,10 @@ def export_route_group(
         _autosize_columns(ws)
 
     # ── Special sheets ────────────────────────────────────────────────────────
-    for spec in route_group.special_sheets:
+    special_sheets = route_group.special_sheets or []
+    for spec in special_sheets:
+        # Debugging print (check your backend logs if sheets are missing)
+        print(f"DEBUG: Exporting special sheet: {spec.get('name')}")
         spec_origin = spec["origin"]
         spec_dests = set(spec["destinations"])
         columns = spec.get("columns", 6)
