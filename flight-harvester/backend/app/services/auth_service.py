@@ -102,7 +102,8 @@ async def delete_user(
     user = await get_user_by_id(session, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    session.delete(user)
+    from sqlalchemy import delete as sa_delete
+    await session.execute(sa_delete(User).where(User.id == user_id))
     await session.commit()
 
 
