@@ -35,9 +35,28 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Right form panel */}
+      {/* Desktop brand panel */}
+      <div className="hidden flex-1 flex-col justify-between bg-gradient-to-br from-brand-700 to-brand-900 px-12 py-10 text-white lg:flex">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur">
+            <Plane className="h-5 w-5" />
+          </div>
+          <span className="text-lg font-semibold">Flight Price Tracker</span>
+        </div>
+        <div className="max-w-md">
+          <h1 className="text-3xl font-bold leading-tight">
+            Track every route. Every day. Automatically.
+          </h1>
+          <p className="mt-4 text-base text-white/80">
+            Collect the cheapest daily flight prices across hundreds of routes
+            and export them to Excel on demand.
+          </p>
+        </div>
+        <p className="text-xs text-white/60">© Flight Price Tracker</p>
+      </div>
+
+      {/* Form panel */}
       <div className="flex flex-1 flex-col items-center justify-center bg-slate-50 px-8 py-12">
-        {/* Mobile logo */}
         <div className="mb-8 flex flex-col items-center gap-3 text-center lg:hidden">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600">
             <Plane className="h-6 w-6 text-white" />

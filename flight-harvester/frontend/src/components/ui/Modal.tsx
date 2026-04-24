@@ -2,15 +2,24 @@ import { X } from "lucide-react";
 import { type ReactNode, useEffect } from "react";
 import { cn } from "../../utils/cn";
 
+type ModalSize = "md" | "lg" | "xl";
+
+const SIZE_CLASS: Record<ModalSize, string> = {
+  md: "max-w-md",
+  lg: "max-w-lg",
+  xl: "max-w-2xl",
+};
+
 interface ModalProps {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
   className?: string;
+  size?: ModalSize;
 }
 
-export function Modal({ open, onClose, title, children, className }: ModalProps) {
+export function Modal({ open, onClose, title, children, className, size = "lg" }: ModalProps) {
   // Close on Escape
   useEffect(() => {
     if (!open) return;
@@ -37,7 +46,8 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       {/* Card */}
       <div
         className={cn(
-          "relative z-10 flex w-full max-w-lg flex-col rounded-xl border border-slate-200 bg-white shadow-xl",
+          "relative z-10 flex w-full flex-col rounded-xl border border-slate-200 bg-white shadow-xl",
+          SIZE_CLASS[size],
           "max-h-[90vh]",
           className,
         )}
