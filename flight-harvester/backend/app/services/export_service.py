@@ -12,9 +12,9 @@ from app.models.route_group import RouteGroup
 
 log = get_logger(__name__)
 
-_MAIN_HEADERS = ["Date", "Dep Airport", "Arrivel Airport", "Night ", "Airline", "Flight Price"]
-_SPECIAL_HEADERS_4 = ["Date", "Dep Airport", "Arrivel Airport", "Flight Price"]
-_SPECIAL_HEADERS_6 = ["Date", "Dep Airport", "Arrivel Airport", "Night ", "Airline", "Flight Price"]
+_MAIN_HEADERS = ["Date", "Dep Airport", "Arrival Airport", "Nights", "Airline", "Flight Price"]
+_SPECIAL_HEADERS_4 = ["Date", "Dep Airport", "Arrival Airport", "Flight Price"]
+_SPECIAL_HEADERS_6 = ["Date", "Dep Airport", "Arrival Airport", "Nights", "Airline", "Flight Price"]
 
 
 def export_route_group(

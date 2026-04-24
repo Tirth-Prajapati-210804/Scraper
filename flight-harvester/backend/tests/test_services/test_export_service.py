@@ -62,8 +62,8 @@ def test_export_has_correct_headers() -> None:
     ws = wb["YVR"]
     assert ws.cell(1, 1).value == "Date"
     assert ws.cell(1, 2).value == "Dep Airport"
-    assert ws.cell(1, 3).value == "Arrivel Airport"
-    assert ws.cell(1, 4).value == "Night "
+    assert ws.cell(1, 3).value == "Arrival Airport"
+    assert ws.cell(1, 4).value == "Nights"
     assert ws.cell(1, 5).value == "Airline"
     assert ws.cell(1, 6).value == "Flight Price"
 
@@ -128,7 +128,7 @@ def test_export_special_sheet_4_columns() -> None:
     ws = wb["Special"]
     assert ws.cell(1, 1).value == "Date"
     assert ws.cell(1, 2).value == "Dep Airport"
-    assert ws.cell(1, 3).value == "Arrivel Airport"
+    assert ws.cell(1, 3).value == "Arrival Airport"
     assert ws.cell(1, 4).value == "Flight Price"
     assert ws.cell(2, 4).value == 250
 
@@ -145,7 +145,7 @@ def test_export_special_sheet_6_columns() -> None:
     result = make_result(origin="YVR", destination="SGN", price=400.0, airline="VN")
     wb = openpyxl.load_workbook(BytesIO(export_route_group(rg, [result])))
     ws = wb["Multi"]
-    assert ws.cell(1, 4).value == "Night "
+    assert ws.cell(1, 4).value == "Nights"
     assert ws.cell(1, 5).value == "Airline"
     assert ws.cell(1, 6).value == "Flight Price"
     assert ws.cell(2, 4).value == 7
