@@ -122,7 +122,7 @@ async def test_create_user_success() -> None:
         full_name="New User",
         email="new@example.com",
         password="StrongPassword12!",
-        role="user",
+        role="employee",
     )
     user = await create_user(session, data)
     session.add.assert_called_once()

@@ -28,19 +28,34 @@ class Settings(BaseSettings):
             return json.dumps(v)
         return str(v)
 
-    def get_cors_origins(self) -> list[str]:
-        v = self.cors_origins.strip()
+    @field_validator("cors_origins")
+    @classmethod
+    def reject_wildcard_cors(cls, v: str) -> str:
+        for origin in cls._parse_csv_or_json(v):
+            if origin == "*":
+                raise ValueError(
+                    "CORS_ORIGINS cannot contain '*'. Specify explicit origins like "
+                    "'https://app.example.com' to prevent credentialed-request abuse."
+                )
+        return v
+
+    @staticmethod
+    def _parse_csv_or_json(raw: str) -> list[str]:
+        v = raw.strip()
         if v.startswith("["):
             import json
-            return json.loads(v)
-        return [origin.strip() for origin in v.split(",") if origin.strip()]
+            try:
+                parsed = json.loads(v)
+            except json.JSONDecodeError:
+                return []
+            return [str(x).strip() for x in parsed if str(x).strip()]
+        return [item.strip() for item in v.split(",") if item.strip()]
+
+    def get_cors_origins(self) -> list[str]:
+        return self._parse_csv_or_json(self.cors_origins)
 
     def get_allowed_hosts(self) -> list[str]:
-        v = self.allowed_hosts.strip()
-        if v.startswith("["):
-            import json
-            return json.loads(v)
-        return [host.strip() for host in v.split(",") if host.strip()]
+        return self._parse_csv_or_json(self.allowed_hosts)
     expose_api_docs: bool = False
 
     # Database

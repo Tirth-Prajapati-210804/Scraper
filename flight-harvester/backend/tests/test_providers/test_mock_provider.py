@@ -36,7 +36,9 @@ async def test_search_results_sorted_by_price(provider: MockProvider) -> None:
 
 @pytest.mark.asyncio
 async def test_search_results_have_required_fields(provider: MockProvider) -> None:
-    results = await provider.search_one_way("YVR", "DPS", date.today() + timedelta(days=10))
+    results = await provider.search_one_way(
+        "YVR", "DPS", date.today() + timedelta(days=10), currency="CAD"
+    )
     for r in results:
         assert r.price > 0
         assert r.currency == "CAD"

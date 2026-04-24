@@ -50,4 +50,7 @@ def redact_value(value: Any) -> Any:
 
 
 def redact_log_event(_: Any, __: Any, event_dict: dict[str, Any]) -> dict[str, Any]:
-    return {key: redact_value(value) for key, value in event_dict.items()}
+    return {
+        key: ("[REDACTED]" if str(key).lower() in _SENSITIVE_KEYS else redact_value(value))
+        for key, value in event_dict.items()
+    }

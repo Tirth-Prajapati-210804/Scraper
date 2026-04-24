@@ -33,7 +33,7 @@ def test_debug_false_when_production() -> None:
 
 def test_cors_origins_from_comma_string() -> None:
     s = make_settings(cors_origins="http://localhost:3000,http://localhost:5173")
-    assert s.cors_origins == ["http://localhost:3000", "http://localhost:5173"]
+    assert s.get_cors_origins() == ["http://localhost:3000", "http://localhost:5173"]
 
 
 def test_wildcard_cors_origin_rejected() -> None:
