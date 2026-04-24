@@ -6,8 +6,11 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font
 from openpyxl.utils import get_column_letter
 
+from app.core.logging import get_logger
 from app.models.all_flight_result import AllFlightResult
 from app.models.route_group import RouteGroup
+
+log = get_logger(__name__)
 
 _MAIN_HEADERS = ["Date", "Dep Airport", "Arrivel Airport", "Night ", "Airline", "Flight Price"]
 _SPECIAL_HEADERS_4 = ["Date", "Dep Airport", "Arrivel Airport", "Flight Price"]
@@ -51,8 +54,7 @@ def export_route_group(
     # ── Special sheets ────────────────────────────────────────────────────────
     special_sheets = route_group.special_sheets or []
     for spec in special_sheets:
-        # Debugging print (check your backend logs if sheets are missing)
-        print(f"DEBUG: Exporting special sheet: {spec.get('name')}")
+        log.debug("export_special_sheet", name=spec.get("name"))
         spec_origin = spec["origin"]
         spec_dests = set(spec["destinations"])
         columns = spec.get("columns", 6)
