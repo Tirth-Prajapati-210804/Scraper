@@ -42,6 +42,23 @@ export interface SpecialSheet {
   columns: number;
 }
 
+export type ScrapeHealthStatus =
+  | "ok"
+  | "never_scraped"
+  | "rate_limited"
+  | "quota_exhausted"
+  | "auth_error"
+  | "error";
+
+export interface ScrapeHealth {
+  status: ScrapeHealthStatus;
+  last_attempt_at: string | null;
+  last_success_at: string | null;
+  last_error_message: string | null;
+  errors_last_hour: number;
+  successes_last_hour: number;
+}
+
 export interface RouteGroupProgress {
   route_group_id: string;
   name: string;
@@ -51,4 +68,5 @@ export interface RouteGroupProgress {
   last_scraped_at: string | null;
   per_origin: Record<string, { total: number; collected: number }>;
   scraped_dates: string[];
+  health: ScrapeHealth;
 }

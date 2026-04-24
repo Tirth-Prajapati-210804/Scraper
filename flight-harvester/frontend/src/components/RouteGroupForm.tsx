@@ -32,12 +32,17 @@ const CURRENCIES = [
   { value: "VND", label: "VND – Vietnamese Dong" },
 ];
 
-const STOP_OPTIONS: { label: string; value: number | null }[] = [
-  { label: "Any", value: null },
-  { label: "Direct", value: 0 },
-  { label: "1", value: 1 },
-  { label: "Prefer 1", value: 3 },
-  { label: "2", value: 2 },
+const STOP_OPTIONS: { label: string; value: number | null; hint: string }[] = [
+  { label: "Any", value: null, hint: "Cheapest of all itineraries, no stop filter." },
+  { label: "Direct only", value: 0, hint: "Only non-stop flights." },
+  { label: "Up to 1 stop", value: 1, hint: "Non-stop or 1-stop itineraries only." },
+  {
+    label: "Prefer 1-stop",
+    value: 3,
+    hint:
+      "Pick the cheapest 0- or 1-stop flight. If none are available on a date, fall back to 2-stop pricing.",
+  },
+  { label: "Up to 2 stops", value: 2, hint: "Non-stop, 1-stop, or 2-stop itineraries." },
 ];
 
 // ── Shared "additional options" fields ───────────────────────────────────────
@@ -79,13 +84,14 @@ function ExtraOptionsFields({
           </select>
         </div>
         <div>
-          <label className="field-label">Max Stops</label>
+          <label className="field-label">Stops</label>
           <div className="mt-1 flex gap-1.5 flex-wrap">
             {STOP_OPTIONS.map((opt) => (
               <button
                 key={String(opt.value)}
                 type="button"
                 onClick={() => onChange("max_stops", opt.value)}
+                title={opt.hint}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                   values.max_stops === opt.value
                     ? "border-brand-600 bg-brand-600 text-white"
@@ -96,6 +102,11 @@ function ExtraOptionsFields({
               </button>
             ))}
           </div>
+          {values.max_stops != null && (
+            <p className="mt-1.5 text-xs text-slate-500">
+              {STOP_OPTIONS.find((o) => o.value === values.max_stops)?.hint}
+            </p>
+          )}
         </div>
       </div>
 
@@ -210,34 +221,42 @@ function QuickForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-3 text-xs text-slate-600">
+        Track the cheapest outbound flight every day across the coming months.
+        Use country or city names — we&apos;ll resolve them to all relevant
+        airports automatically.
+      </div>
+
       {/* Route input */}
       <div className="flex items-center gap-3">
         <div className="flex-1">
-          <label className="field-label">From</label>
+          <label className="field-label">Outbound from</label>
           <input
             className="field-input"
             value={form.origin}
             onChange={(e) => set("origin", e.target.value)}
             required
-            placeholder="Canada"
+            placeholder="e.g. Canada or Toronto"
             autoFocus
           />
         </div>
         <div className="mt-5 text-xl font-bold text-slate-400">→</div>
         <div className="flex-1">
-          <label className="field-label">To</label>
+          <label className="field-label">Outbound to</label>
           <input
             className="field-input"
             value={form.destination}
             onChange={(e) => set("destination", e.target.value)}
             required
-            placeholder="Vietnam"
+            placeholder="e.g. Berlin or BER"
           />
         </div>
       </div>
 
-      <p className="text-xs text-slate-400">
-        Use country names, city names, or IATA codes. Combine with commas: <em>Tokyo, Osaka</em>
+      <p className="text-xs text-slate-500">
+        Separate multiple airports or cities with commas, e.g.{" "}
+        <em>Tokyo, Osaka</em> or <em>YYZ, YUL</em>. A return flight can be added
+        as a separate leg after creation via <strong>Edit</strong>.
       </p>
 
       {/* Nights & Days ahead */}
@@ -253,6 +272,9 @@ function QuickForm({
             onChange={(e) => set("nights", Number(e.target.value))}
             required
           />
+          <p className="mt-1 text-xs text-slate-400">
+            Used to pair outbound/return dates in the Excel export.
+          </p>
         </div>
         <div>
           <label className="field-label">Days ahead to track</label>
@@ -265,6 +287,9 @@ function QuickForm({
             onChange={(e) => set("days_ahead", Number(e.target.value))}
             required
           />
+          <p className="mt-1 text-xs text-slate-400">
+            How many days into the future to scrape (max 730).
+          </p>
         </div>
       </div>
 
@@ -440,45 +465,64 @@ function AdvancedForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-3 text-xs text-slate-600">
+        <strong>Manual mode.</strong> You enter IATA codes directly. Use{" "}
+        <strong>Return &amp; extra legs</strong> below to track the return
+        flight (e.g. <em>BUD → YYZ after 11 nights</em>) — each leg becomes its
+        own sheet in the Excel export.
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="field-label">Route Name</label>
+          <label className="field-label">Group name</label>
           <input
             className="field-input"
             value={form.name}
             onChange={(e) => set("name", e.target.value)}
             required
-            placeholder="e.g. Canada-Tokyo"
+            placeholder="e.g. Canada → Berlin"
           />
+          <p className="mt-1 text-xs text-slate-400">
+            Shown on the dashboard card and used as the Excel filename.
+          </p>
         </div>
         <div>
-          <label className="field-label">Destination Label</label>
+          <label className="field-label">Destination label</label>
           <input
             className="field-input"
             value={form.destination_label}
             onChange={(e) => set("destination_label", e.target.value)}
             required
-            placeholder="e.g. TYO/SHA"
+            placeholder="e.g. BER"
           />
+          <p className="mt-1 text-xs text-slate-400">
+            Short text printed in the exported spreadsheet&apos;s destination column.
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="field-label">Origin airports</label>
+          <label className="field-label">Outbound from (IATA)</label>
           <TagInput
             value={form.origins}
             onChange={(tags) => set("origins", tags)}
             placeholder="YYZ, YVR…"
           />
+          <p className="mt-1 text-xs text-slate-400">
+            One sheet per origin. Press <kbd>Enter</kbd> or comma to add.
+          </p>
         </div>
         <div>
-          <label className="field-label">Destination airports</label>
+          <label className="field-label">Outbound to (IATA)</label>
           <TagInput
             value={form.destinations}
             onChange={(tags) => set("destinations", tags)}
-            placeholder="NRT, BKK…"
+            placeholder="BER, TXL…"
           />
+          <p className="mt-1 text-xs text-slate-400">
+            We keep the cheapest across every destination, per day.
+          </p>
         </div>
       </div>
 
@@ -493,6 +537,9 @@ function AdvancedForm({
             onChange={(e) => set("nights", Number(e.target.value))}
             required
           />
+          <p className="mt-1 text-xs text-slate-400">
+            Pairs each outbound date with a return date in the export.
+          </p>
         </div>
         <div>
           <label className="field-label">Days ahead to track</label>
@@ -504,6 +551,9 @@ function AdvancedForm({
             onChange={(e) => set("days_ahead", Number(e.target.value))}
             required
           />
+          <p className="mt-1 text-xs text-slate-400">
+            How far into the future to scrape (max 730).
+          </p>
         </div>
       </div>
 
@@ -519,12 +569,19 @@ function AdvancedForm({
         </label>
       )}
 
-      {/* Additional Routes */}
+      {/* Return / extra legs */}
       <div className="rounded-lg border border-slate-200 px-3 py-4">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Additional Routes (Multi-City)
-          </p>
+        <div className="mb-2 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Return &amp; extra legs
+            </p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Each leg becomes a separate sheet in the Excel export. Typical use:
+              a return flight like <em>Budapest → Toronto</em>, or a different city
+              pair you want tracked in the same group.
+            </p>
+          </div>
           <button
             type="button"
             onClick={() =>
@@ -535,10 +592,10 @@ function AdvancedForm({
             }
             className="flex items-center gap-1 rounded-md text-xs font-medium text-brand-600 hover:text-brand-700"
           >
-            <Plus className="h-3 w-3" /> Add Route
+            <Plus className="h-3 w-3" /> Add leg
           </button>
         </div>
-        
+
         {form.special_sheets.length > 0 ? (
           <div className="space-y-4">
             {form.special_sheets.map((sheet, index) => (
@@ -550,13 +607,16 @@ function AdvancedForm({
                     next.splice(index, 1);
                     set("special_sheets", next);
                   }}
+                  aria-label="Remove leg"
                   className="absolute right-2 top-2 rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
                 >
                   <X className="h-4 w-4" />
                 </button>
                 <div className="grid grid-cols-2 gap-3 pr-8">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-700">Tab Name</label>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">
+                      Sheet name
+                    </label>
                     <input
                       className="field-input text-sm"
                       value={sheet.name}
@@ -565,26 +625,30 @@ function AdvancedForm({
                         next[index] = { ...next[index], name: e.target.value };
                         set("special_sheets", next);
                       }}
-                      placeholder="e.g. Osaka to Beijing"
+                      placeholder="e.g. Budapest → Toronto"
                       required
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-700">Origin Airport</label>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">
+                      From (IATA)
+                    </label>
                     <input
                       className="field-input text-sm"
                       value={sheet.origin}
                       onChange={(e) => {
                         const next = [...form.special_sheets];
-                        next[index] = { ...next[index], origin: e.target.value };
+                        next[index] = { ...next[index], origin: e.target.value.toUpperCase() };
                         set("special_sheets", next);
                       }}
-                      placeholder="e.g. OSA"
+                      placeholder="e.g. BUD"
                       required
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-700">Destination Label</label>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">
+                      To (label)
+                    </label>
                     <input
                       className="field-input text-sm"
                       value={sheet.destination_label}
@@ -593,12 +657,14 @@ function AdvancedForm({
                         next[index] = { ...next[index], destination_label: e.target.value };
                         set("special_sheets", next);
                       }}
-                      placeholder="e.g. Beijing (Any)"
+                      placeholder="e.g. Toronto"
                       required
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-700">Destination Airports</label>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">
+                      To airports (IATA)
+                    </label>
                     <TagInput
                       value={sheet.destinations}
                       onChange={(tags) => {
@@ -606,7 +672,7 @@ function AdvancedForm({
                         next[index] = { ...next[index], destinations: tags };
                         set("special_sheets", next);
                       }}
-                      placeholder="PEK, PKX..."
+                      placeholder="YYZ, YUL..."
                     />
                   </div>
                 </div>
@@ -614,8 +680,9 @@ function AdvancedForm({
             ))}
           </div>
         ) : (
-          <p className="text-xs text-slate-400">
-            Add specific one-off routes that should be tracked alongside the main destinations (e.g. return flights).
+          <p className="rounded-md bg-slate-50 px-2 py-1.5 text-xs text-slate-500">
+            No extra legs yet. Click <strong>Add leg</strong> to track a return flight
+            or another route alongside the main one.
           </p>
         )}
       </div>
