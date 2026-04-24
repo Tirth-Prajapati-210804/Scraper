@@ -65,10 +65,12 @@ function ExtraOptionsFields({
 }) {
   const currencyChanged = originalCurrency != null && values.currency !== originalCurrency;
 
+  const activeStop = STOP_OPTIONS.find((o) => o.value === values.max_stops);
+
   return (
     <div className="space-y-4">
-      {/* Currency + Stops side by side */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Row 1: Currency + date range on one aligned row */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
           <label className="field-label">Currency</label>
           <select
@@ -84,42 +86,7 @@ function ExtraOptionsFields({
           </select>
         </div>
         <div>
-          <label className="field-label">Stops</label>
-          <div className="mt-1 flex gap-1.5 flex-wrap">
-            {STOP_OPTIONS.map((opt) => (
-              <button
-                key={String(opt.value)}
-                type="button"
-                onClick={() => onChange("max_stops", opt.value)}
-                title={opt.hint}
-                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  values.max_stops === opt.value
-                    ? "border-brand-600 bg-brand-600 text-white"
-                    : "border-slate-300 bg-white text-slate-700 hover:border-brand-400"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-          {values.max_stops != null && (
-            <p className="mt-1.5 text-xs text-slate-500">
-              {STOP_OPTIONS.find((o) => o.value === values.max_stops)?.hint}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {currencyChanged && (
-        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-          Currency change only affects new collections.
-        </p>
-      )}
-
-      {/* Date range */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="field-label">Start Date</label>
+          <label className="field-label">Start date</label>
           <input
             type="date"
             className="field-input"
@@ -128,7 +95,7 @@ function ExtraOptionsFields({
           />
         </div>
         <div>
-          <label className="field-label">End Date</label>
+          <label className="field-label">End date</label>
           <input
             type="date"
             className="field-input"
@@ -137,6 +104,41 @@ function ExtraOptionsFields({
           />
         </div>
       </div>
+
+      {/* Row 2: Stops — full-width segmented control, even columns */}
+      <div>
+        <label className="field-label">Stops</label>
+        <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5">
+          {STOP_OPTIONS.map((opt) => {
+            const selected = values.max_stops === opt.value;
+            return (
+              <button
+                key={String(opt.value)}
+                type="button"
+                onClick={() => onChange("max_stops", opt.value)}
+                title={opt.hint}
+                aria-pressed={selected}
+                className={`rounded-lg border px-2 py-1.5 text-sm font-medium transition-colors ${
+                  selected
+                    ? "border-brand-600 bg-brand-600 text-white"
+                    : "border-slate-300 bg-white text-slate-700 hover:border-brand-400"
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+        {activeStop && (
+          <p className="mt-1.5 text-xs text-slate-500">{activeStop.hint}</p>
+        )}
+      </div>
+
+      {currencyChanged && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+          Currency change only affects new collections.
+        </p>
+      )}
     </div>
   );
 }
@@ -736,7 +738,7 @@ export function RouteGroupForm({ open, onClose, initial }: RouteGroupFormProps) 
   const title = initial ? "Edit Route Group" : "New Route Group";
 
   return (
-    <Modal open={open} onClose={onClose} title={title}>
+    <Modal open={open} onClose={onClose} title={title} size="xl">
       {!initial && (
         <div className="mb-5 flex rounded-lg border border-slate-200 bg-slate-50 p-1">
           <button
