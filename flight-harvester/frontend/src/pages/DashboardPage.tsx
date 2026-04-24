@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
+  AlertTriangle,
   Database,
+  FlaskConical,
   FolderOpen,
   Globe,
   MapPin,
@@ -128,7 +130,7 @@ export function DashboardPage() {
         {/* No-provider warning banner */}
         {noProvider && (
           <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            <span className="mt-0.5 text-lg leading-none">⚠️</span>
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
               <p className="font-semibold">No API key configured</p>
               <p className="mt-0.5 text-amber-700">
@@ -143,7 +145,7 @@ export function DashboardPage() {
         {/* Demo mode notice */}
         {health?.demo_mode && (
           <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-            <span className="text-lg leading-none">🧪</span>
+            <FlaskConical className="h-4 w-4 shrink-0" />
             <p>
               <span className="font-semibold">Demo mode active</span> — prices are fake and generated locally. Switch to a real{" "}
               <code className="rounded bg-blue-100 px-1 font-mono text-xs">SERPAPI_KEY</code> for production use.

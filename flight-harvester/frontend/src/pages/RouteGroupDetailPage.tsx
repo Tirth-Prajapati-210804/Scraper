@@ -24,6 +24,15 @@ import { Skeleton } from "../components/ui/Skeleton";
 import { useToast } from "../context/ToastContext";
 import { usePageTitle } from "../utils/usePageTitle";
 
+function formatStopsLabel(v: number | null): string {
+  if (v == null) return "Any";
+  if (v === 0) return "Direct only";
+  if (v === 1) return "Up to 1 stop";
+  if (v === 2) return "Up to 2 stops";
+  if (v === 3) return "Prefer 1-stop";
+  return String(v);
+}
+
 export function RouteGroupDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -194,6 +203,8 @@ export function RouteGroupDetailPage() {
           </Button>
           <button
             onClick={() => setConfirmDelete(true)}
+            aria-label="Delete route group"
+            title="Delete route group"
             className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
           >
             <Trash2 className="h-4 w-4" />
@@ -227,9 +238,9 @@ export function RouteGroupDetailPage() {
             <p className="mt-0.5 text-sm font-semibold text-slate-800">{group.currency}</p>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">Max Stops</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">Stops</p>
             <p className="mt-0.5 text-sm font-semibold text-slate-800">
-              {group.max_stops == null ? "Any" : group.max_stops === 0 ? "Direct" : group.max_stops}
+              {formatStopsLabel(group.max_stops)}
             </p>
           </div>
         </div>
