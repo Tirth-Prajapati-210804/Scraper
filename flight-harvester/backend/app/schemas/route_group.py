@@ -210,6 +210,21 @@ class PerOriginProgress(BaseModel):
     collected: int
 
 
+class ScrapeHealth(BaseModel):
+    """Summary of recent scrape activity for a route group.
+
+    status values: "ok", "never_scraped", "rate_limited", "quota_exhausted",
+                   "auth_error", "error"
+    """
+
+    status: str
+    last_attempt_at: datetime | None = None
+    last_success_at: datetime | None = None
+    last_error_message: str | None = None
+    errors_last_hour: int = 0
+    successes_last_hour: int = 0
+
+
 class RouteGroupProgress(BaseModel):
     route_group_id: uuid.UUID
     name: str
@@ -219,3 +234,4 @@ class RouteGroupProgress(BaseModel):
     last_scraped_at: datetime | None
     per_origin: dict[str, PerOriginProgress]
     scraped_dates: list[str] = Field(default_factory=list)
+    health: ScrapeHealth = Field(default_factory=lambda: ScrapeHealth(status="never_scraped"))

@@ -15,9 +15,24 @@ from app.core.redaction import redact_text
 from app.models.all_flight_result import AllFlightResult
 from app.models.scrape_log import ScrapeLog
 from app.providers.base import FlightProvider, ProviderResult
+from app.providers.serpapi import (
+    ProviderAuthError,
+    ProviderQuotaExhaustedError,
+    ProviderRateLimitedError,
+)
 from app.utils.airline_codes import normalize_airline
 
 log = get_logger(__name__)
+
+
+def _classify_exception(exc: BaseException) -> str:
+    if isinstance(exc, ProviderQuotaExhaustedError):
+        return "quota_exhausted"
+    if isinstance(exc, ProviderAuthError):
+        return "auth_error"
+    if isinstance(exc, ProviderRateLimitedError):
+        return "rate_limited"
+    return "error"
 
 
 @dataclass
@@ -92,6 +107,7 @@ class PriceCollector:
                 except Exception as exc:
                     elapsed_ms = int((time.monotonic() - start) * 1000)
                     safe_error = redact_text(str(exc))
+                    classification = _classify_exception(exc)
                     errors[provider.name] = safe_error
                     log.warning(
                         "provider_error",
@@ -100,6 +116,7 @@ class PriceCollector:
                         destination=destination,
                         date=str(depart_date),
                         error=safe_error,
+                        classification=classification,
                     )
                     log_entry = ScrapeLog(
                         route_group_id=route_group_id,
@@ -107,7 +124,7 @@ class PriceCollector:
                         destination=destination,
                         depart_date=depart_date,
                         provider=provider.name,
-                        status="error",
+                        status=classification,
                         offers_found=0,
                         error_message=safe_error[:500],
                         duration_ms=elapsed_ms,

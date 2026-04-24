@@ -1,18 +1,24 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.daily_cheapest import DailyCheapestPrice
 from app.models.route_group import RouteGroup
+from app.models.scrape_log import ScrapeLog
 from app.schemas.route_group import (
     PerOriginProgress,
     RouteGroupCreate,
     RouteGroupProgress,
     RouteGroupUpdate,
+    ScrapeHealth,
 )
+
+_NON_ERROR_STATUSES = {"success", "no_results"}
+_ERROR_PRIORITY = ("quota_exhausted", "auth_error", "rate_limited", "error")
 
 
 async def list_all(
@@ -161,6 +167,8 @@ async def get_progress(session: AsyncSession, group_id: uuid.UUID) -> RouteGroup
     )
     scraped_dates = [d.isoformat() for (d,) in dates_result.fetchall()]
 
+    health = await _compute_scrape_health(session, group_id, has_any_data=dates_with_data > 0)
+
     return RouteGroupProgress(
         route_group_id=group_id,
         name=group.name,
@@ -170,4 +178,81 @@ async def get_progress(session: AsyncSession, group_id: uuid.UUID) -> RouteGroup
         last_scraped_at=last_scraped_at,
         per_origin=per_origin,
         scraped_dates=scraped_dates,
+        health=health,
+    )
+
+
+async def _compute_scrape_health(
+    session: AsyncSession,
+    group_id: uuid.UUID,
+    has_any_data: bool,
+) -> ScrapeHealth:
+    """Summarise the last hour of scrape activity into a single health object."""
+    now = datetime.now(timezone.utc)
+    window_start = now - timedelta(hours=1)
+
+    last_attempt = (
+        await session.execute(
+            select(ScrapeLog.created_at, ScrapeLog.status, ScrapeLog.error_message)
+            .where(ScrapeLog.route_group_id == group_id)
+            .order_by(ScrapeLog.created_at.desc())
+            .limit(1)
+        )
+    ).first()
+
+    if last_attempt is None and not has_any_data:
+        return ScrapeHealth(status="never_scraped")
+
+    last_success_at = (
+        await session.execute(
+            select(func.max(ScrapeLog.created_at)).where(
+                ScrapeLog.route_group_id == group_id,
+                ScrapeLog.status.in_(list(_NON_ERROR_STATUSES)),
+            )
+        )
+    ).scalar_one()
+
+    counts_rows = (
+        await session.execute(
+            select(ScrapeLog.status, func.count())
+            .where(
+                ScrapeLog.route_group_id == group_id,
+                ScrapeLog.created_at >= window_start,
+            )
+            .group_by(ScrapeLog.status)
+        )
+    ).all()
+    counts = {status: count for status, count in counts_rows}
+    successes = sum(c for s, c in counts.items() if s in _NON_ERROR_STATUSES)
+    errors = sum(c for s, c in counts.items() if s not in _NON_ERROR_STATUSES)
+
+    if last_attempt is None:
+        return ScrapeHealth(
+            status="ok",
+            last_success_at=last_success_at,
+            successes_last_hour=successes,
+            errors_last_hour=errors,
+        )
+
+    last_attempt_at, last_status, last_error_message = last_attempt
+
+    # Prefer the worst recent error class; otherwise "ok".
+    recent_error_status = next(
+        (s for s in _ERROR_PRIORITY if counts.get(s, 0) > 0),
+        None,
+    )
+    if recent_error_status and successes == 0:
+        status = recent_error_status
+    elif last_status not in _NON_ERROR_STATUSES and successes == 0:
+        status = last_status if last_status in _ERROR_PRIORITY else "error"
+    else:
+        status = "ok"
+
+    return ScrapeHealth(
+        status=status,
+        last_attempt_at=last_attempt_at,
+        last_success_at=last_success_at,
+        last_error_message=last_error_message if status != "ok" else None,
+        successes_last_hour=successes,
+        errors_last_hour=errors,
     )
